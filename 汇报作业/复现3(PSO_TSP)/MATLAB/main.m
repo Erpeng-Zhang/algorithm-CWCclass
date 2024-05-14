@@ -3,7 +3,6 @@ clc;clear
 %% 下载数据
 data=load('eil51.txt');
 cityCoor=[data(:,2) data(:,3)];%城市坐标矩阵
-
 figure(1)
 plot(cityCoor(:,1),cityCoor(:,2),'ms','LineWidth',2,'MarkerEdgeColor','k','MarkerFaceColor','g')
 legend('城市位置')
@@ -28,7 +27,7 @@ for i=1:n
     end
 end
 
-nMax=500;                      %进化次数
+nMax=1000;                      %进化次数
 indiNumber=300;                %个体数目
 individual=zeros(indiNumber,n);
 %^初始化粒子位置

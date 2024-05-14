@@ -248,7 +248,7 @@ def read_tsp(path):
 
 # 读取数据
 data = read_tsp('data/st70.tsp')
-#data = read_tsp('data/eil51.tsp')
+# data = read_tsp('data/eil51.tsp')
 
 # 读取数据
 data = np.array(data)
