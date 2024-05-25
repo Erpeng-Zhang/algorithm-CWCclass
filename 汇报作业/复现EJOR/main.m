@@ -13,7 +13,7 @@ S_max = 40;           % 粒子群规模
 
 TI = 100;             % 初始温度
 TF = 0.01;            % 最小温度
-R = 50;               % 
+R = 50;               % 模拟退火搜索次数
 alpha = 0.9999;       % 退火系数
 
 
@@ -25,12 +25,22 @@ model.v = [];
 N = 12; % 任务数
 M = 3;  % 机器数
 V = 2;  % 小车数
-data = []; % 任务数据——任务号，机器号，处理时间
+J1 = [1,3,2,5;
+    10,16,18,0]; % 工件1
+J2 = [3,1,4,5;
+    15,22,18,0];  % 工件2
+J3 = [2,4,1,5;
+    18,16,22,0];  % 工件3
+data ={J1,J2,J3} ; % 任务数据——任务号，机器号，处理时间
 
 LB = cal_LB(); %可行解下界
 
 % 小车转运时间数据
-time = [];
+time = [0 6 8 10 12
+        12 0 6 8 10
+        10 6 0 6 8
+        8 8 6 0 6
+        6 10 8 6 0];
 
 
 % 初始化粒子群
@@ -56,13 +66,13 @@ F_SA = particles(a).y;
 
 % 初始化温度和迭代次数
 T = TI; g = 0;
-d_f_p = [];
+d_f_p = [];%存储迭代过程中的最优解  用于绘图
 %% 主循环
-while (T > TF && g<100) || Gbest.y > LB
+while (T > TF && g<100) %|| Gbest.y > LB
     for r = 1 : R
         % TODO:产生邻域解
         Y = cal_larboslusion(X_SA);
-        F_Y = fitness(Y, data, time);
+        F_Y = fitness(Y, data, V, time);
         % 计算适应度变化
         delta_F = F_SA - F_Y;
         if delta_F > 0
@@ -90,12 +100,12 @@ while (T > TF && g<100) || Gbest.y > LB
 
     % 更新粒子
     for s = 1 : S_max
-        % TODO:更新粒子速度
+        % 更新粒子速度
         particles(s).v = update_v(w, c1, c2, particles(s).v, particles(s).x, Pbest(s).x, Gbest.x, V_min, V_max);
         % TODO:更新粒子位置
         particles(s).x = particles(s).x + particles(s).v;
         % 更新粒子适应度
-        particles(s).y = fitness(particles(s).x, data, time);
+        particles(s).y = fitness(particles(s).x, V, data, time);
         % 更新个体最优
         if particles(s).y < Pbest(s).y
             Pbest(s).x = particles(s).x;
@@ -131,7 +141,31 @@ title('适应度迭代曲线');
 
 
 %% TODO:适应度函数
-function y = fitness(x, data, time)
+function y = fitness(x,V, data, time)
+    j = data(1,:); % 工序
+    M = data(2,:); % 工序对应机器
+    J = {[1,2,3,4],[5,6,7,8],[9,10,11,12]}; %工序属于的工件
+    
+    % 机器工序方案
+    x1 = x(1 : numel(x)/2);     
+    [~,ind] = sort(x1,'ascend');
+    project = [ind;M(ind)];
+    
+    % 小车方案
+    x2 = x(numel(x)/2+1 : end); 
+    n = round(numel(x2) / V); %小车负责到的数量
+    [~,ind2] = sort(x2,'ascend');
+    for i = 1 : V-1
+        x2(ind((n)*i+1 : n*i)) = i;
+    end
+    x2(ind((n)*i+1 : end) ) = V;
+
+    
+    
+    
+    J = 3; % 工件数量
+
+    time = zeros(1,J)
     y = sum(x);
 end
 
@@ -140,14 +174,24 @@ function lb = cal_LB()
     lb = 0;
 end
 
-%% TODO:产生邻域解
+%% 产生邻域解
 function y = cal_larboslusion(x)
+    value = x(1 : numel(x)/2);
+    [max_v,max_i] = max(value);
+    [min_v,min_i] = min(value);
+    x(max_i) = min_v;
+    x(min_i) = max_v;
     y = x;
 end
 
-%% TODO:更新速度
+%% 更新速度
 function v = update_v(w, c1, c2, v, x, pbest, gbest, V_min, V_max)
-    v = w * v + c1 * rand * (pbest - x) + c2 * rand * (gbest - x);
+    p_sg = x + c1 .* rand(size(x)) .* (pbest - x); % 个体最优方向上一点
+    l_sg = x + c2 .* rand(size(x)) .* (gbest - x); % 全局最优方向上一点
+    G_sg = (x + p_sg + l_sg) / 3; % 超球中心点
+    r = sum(abs(x-G_sg)); % 超球半径; r = ||x-G_sg||_1;范数，记p=1
+    X = G_sg + r;         % 超球表面点
+    v = w * v + X - x; % 速度更新
     v(v < V_min) = V_min;
     v(v > V_max) = V_max;
 end
