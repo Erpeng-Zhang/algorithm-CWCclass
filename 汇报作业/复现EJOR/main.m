@@ -140,34 +140,7 @@ xlabel('迭代次数');ylabel('适应度值');
 title('适应度迭代曲线');
 
 
-%% TODO:适应度函数
-function y = fitness(x,V, data, time)
-    j = data(1,:); % 工序
-    M = data(2,:); % 工序对应机器
-    J = {[1,2,3,4],[5,6,7,8],[9,10,11,12]}; %工序属于的工件
-    
-    % 机器工序方案
-    x1 = x(1 : numel(x)/2);     
-    [~,ind] = sort(x1,'ascend');
-    project = [ind;M(ind)];
-    
-    % 小车方案
-    x2 = x(numel(x)/2+1 : end); 
-    n = round(numel(x2) / V); %小车负责到的数量
-    [~,ind2] = sort(x2,'ascend');
-    for i = 1 : V-1
-        x2(ind((n)*i+1 : n*i)) = i;
-    end
-    x2(ind((n)*i+1 : end) ) = V;
 
-    
-    
-    
-    J = 3; % 工件数量
-
-    time = zeros(1,J)
-    y = sum(x);
-end
 
 %% TODO:计算可行解下界
 function lb = cal_LB()
