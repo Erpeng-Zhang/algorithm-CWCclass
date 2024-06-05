@@ -1,119 +1,93 @@
-import random
-import math
+import pulp
+
+
+# Create a new LP problem
+prob = pulp.LpProblem("Job_Shop_Scheduling_Problem", pulp.LpMinimize)
+
+# Sets
+J = [...]  # Set of jobs
+M = [...]  # Set of machines
+V = [...]  # Set of vehicles
+f = []
+t = []
+J_j = [...]  
+# n_j + 1
+J1_j = [...]  
 
 # Parameters
-w = 1 / (2 * math.log(2))  # Inertia weight
-c1 = 0.5 + math.log(2)  # Individual learning factor
-c2 = 0.5 + math.log(2)  # Swarm learning factor
-V_min = -2  # Minimum velocity
-V_max = 2  # Maximum velocity
-S_max = 40  # Swarm size
+p_kl = {...}  # Processing time of job k on machine l
+tau_kl = {...}  # Transport time from operation (k-1) to k for job l
+tau_LU = {...}  # Transport time from LU to job's first machine
+v_ij = {...}  # Time vehicle needs to travel between jobs i and j
+A = ...  # Total number of vehicles
+LN = ...  # A large number
 
-TI = 100  # Maximum number of iterations
-TF = 0.01  # Minimum fitness value
-R = 50  # Number of repetitions
-alpha = 0.9999  # Annealing coefficient
+# Decision Variables
+w = pulp.LpVariable.dicts("w", ((k, l, i, j) for k in J for l in M for i in J for j in M), 0, 1, pulp.LpBinary)
+x = pulp.LpVariable.dicts("x", ((k, l, i, j) for k in J for l in M for i in J for j in M), 0, 1, pulp.LpBinary)
+z = pulp.LpVariable.dicts("z", ((i, j) for i in J for j in M), cat='Binary')
+u = pulp.LpVariable.dicts("u", ((i, j) for i in J for j in M), cat='Binary')
+c = pulp.LpVariable.dicts("c", ((k, l) for k in J for l in M), lowBound=0)
+T = pulp.LpVariable("T", lowBound=0)
+v = pulp.LpVariable.dicts("v", ((k, l) for k in J for l in M), lowBound=0)
 
-# Problem data
-N = 12  # Number of tasks
-M = 3  # Number of machines
-V = 2  # Number of vehicles
-data = []  # Task data - task ID, machine ID, processing time
+# Objective Function
+prob += T
 
-LB = cal_LB()  # Lower bound of feasible solutions
+# Constraints
+# 1. T is at least the completion time of the last operation
+for l in M:
+    for k in J:
+        prob += T >= c[k, l]
 
-# Transportation time data
-time = []
+# 2. Each operation is followed by exactly one other operation on the same machine
+for l in M:
+    for k in J:
+        prob += sum(x[k, l, i, j] for i in J for j in M) == 1
+        prob += sum(x[i, j, k, l] for i in J for j in M) == 1
 
-# Initialize particle swarm
-particles = [Model() for _ in range(S_max)]
+# 3. Ensure the same number of first and last tasks for vehicles
+for j in J:
+    prob += sum(z[i, j] for i in J) == sum(u[i, j] for i in J)
 
-for i in range(S_max):
-    particles[i].x = [random.random() for _ in range(2 * N)]
-    particles[i].y = fitness(particles[i].x, data, time)
+# 4. At most A vehicles available
+prob += sum(u[i, j] for i in J for j in M) <= A
 
-# Initialize individual best
-Pbest = particles.copy()
+# 5. Each task followed and preceded by exactly one other task
+for l in M:
+    for k in J:
+        prob += sum(x[k, l, i, j] for i in J for j in M) == 1
+        prob += sum(x[i, j, k, l] for i in J for j in M) == 1
 
-# Find the index of the initial global best
-[_, a] = min([particle.y for particle in particles])
+# 6. Completion time constraints
+for l in M:
+    for k in J:
+        prob += c[k, l] >= c[(k-1), l] + p_kl[k, l] + tau_kl[k, (k-1)]
+        prob += c[k, l] >= c[(k-1), l] + p_kl[k, l] + tau_LU[k, l]
+        prob += c[k, l] >= c[(k-1), l] + p_kl[k, l] + v_ij[i, j]
 
-# Initialize global best
-Gbest = particles[a]
+# 7. Vehicle time constraints
+for i in J:
+    for j in M:
+        prob += v[i, j] >= v[i, j] + tau_kl[(k-1), l] + tau_LU[k, l]
 
-X_SA = particles[a].x
-F_SA = particles[a].y
+# 8. Define nature of variables
+for l in M:
+    for k in J:
+        prob += x[k, l, i, j] <= 1
+        prob += x[i, j, k, l] <= 1
 
-# Initialize temperature and iteration count
-T = TI
-g = 0
+# 9. Non-negative variables
+for l in M:
+    for k in J:
+        prob += c[k, l] >= 0
+        prob += v[k, l] >= 0
 
-# Main loop
-while T > TF or Gbest.y > LB:
-    for r in range(R):
-        # TODO: Generate neighboring solutions
-        Y = cal_larboslusion(X_SA)
-        F_Y = fitness(Y, data, time)
+# Solve the problem
+prob.solve()
 
-        # Calculate fitness change
-        delta_F = F_SA - F_Y
-
-        if delta_F > 0:
-            X_SA = Y
-            F_SA = F_Y
-        else:
-            if random.random() < math.exp(delta_F / T):
-                X_SA = Y
-                F_SA = F_Y
-
-                # Update global best
-                if F_SA < Gbest.y:
-                    Gbest.x = X_SA
-                    Gbest.y = F_SA
-            else:
-                # Calculate acceptance probability of new solution
-                Pr = math.exp(delta_F / T)
-
-                if Pr > random.random():
-                    X_SA = Y
-                    F_SA = F_Y
-
-    # Update particles
-    for s in range(S_max):
-        # TODO: Update particle velocity
-        particles[s].v = w * particles[s].v + c1 * random.random() * (Pbest[s].x - particles[s].x) + c2 * random.random() * (Gbest.x - particles[s].x)
-
-        # TODO: Update particle position
-        particles[s].x = [sum(x) for x in zip(particles[s].x, particles[s].v)]
-
-        # Update particle fitness
-        particles[s].y = fitness(particles[s].x, data, time)
-
-        # Update individual best
-        if particles[s].y < Pbest[s].y:
-            Pbest[s].x = particles[s].x
-            Pbest[s].y = particles[s].y
-
-    # Update global best
-    [_, a] = min([particle.y for particle in particles])
-
-    if particles[a].y < Gbest.y:
-        Gbest.x = particles[a].x
-        Gbest.y = particles[a].y
-
-    # Update X_SA and F_SA
-    X_SA = Gbest.x
-    F_SA = Gbest.y
-
-    # Update temperature and iteration count
-    T = alpha * T
-    g += 1
-
-    # Print the best solution at each iteration
-    print("Iteration:", g, ", Current temperature:", T, ", Best solution:", Gbest.y)
-    plt.plot(g, Gbest.y)
-    plt.hold(True)
-
-# TODO: Fitness function
-def fitness(x, data, time):
-    y
+# Print the results
+print(f"Status: {pulp.LpStatus[prob.status]}")
+print(f"Objective value: {pulp.value(prob.objective)}")
+for v in prob.variables():
+    print(f"{v.name} = {v.varValue}")
