@@ -110,9 +110,11 @@ function y = plot_gatt(x,V, data, time)
     end
     
     % set(gca,'yticklabel',{'','M1','M2','M3','M4','V1','V2'});
-    set(gca,'yticklabel',M_Car_lable);
-    xlabel('时间');ylabel('机器或小车');title('甘特图');
     ylim([1, n_M+V+1]);
+    yticks(1:n_M+V+1);
+    yticklabels(M_Car_lable)
+    xlabel('时间');ylabel('机器或小车');title('甘特图');
+    
     hold off;
 
     
