@@ -31,6 +31,7 @@ TI = 100;             % 初始温度
 TF = 0.01;            % 最小温度
 R = 50;               % 模拟退火搜索次数
 alpha = 0.9999;       % 退火系数
+maxIT = 3000;
 
 % 粒子结构体
 model.x = [];
@@ -42,7 +43,7 @@ model.v = [];
 particles = repmat(model, S_max, 1);
 
 for i = 1:S_max
-    particles(i).x = rand(1,2*N);
+    particles(i).x = ini_x(N,V);
     particles(i).y = fitness(particles(i).x,V, data, time);
     particles(i).v = rand(1,2*N);
 end
@@ -64,7 +65,7 @@ F_SA = particles(a).y;
 T = TI; g = 0;
 d_f_p = [];%存储迭代过程中的最优解  用于绘图
 %% 主循环
-while T >= TF && Gbest.y > LB && g < 1500
+while T >= TF && Gbest.y > LB && g < maxIT
     for r = 1 : R
         % 产生邻域解
         Y = cal_larboslusion(X_SA,N);
@@ -99,7 +100,7 @@ while T >= TF && Gbest.y > LB && g < 1500
         % 更新粒子速度
         particles(s).v = update_v(w, c1, c2, particles(s).v, particles(s).x, Pbest(s).x, Gbest.x, V_min, V_max);
         % TODO:更新粒子位置
-        particles(s).x = particles(s).x + particles(s).v;
+        particles(s).x = update_x(particles(s).x , particles(s).v, N, V);
         % 更新粒子适应度
         particles(s).y = fitness(particles(s).x, V, data, time);
         % 更新个体最优
@@ -139,7 +140,12 @@ title('适应度迭代曲线');
 plot_gatt(Gbest.x,V, data, time);
 
 
+function y = ini_x(N,V)
+    x1 = rand(1,N);
+    x2 = rand(1,N)*V;
+    y = [x1 x2];
 
+end
 
 %% 计算可行解下界
 function lb = cal_LB(data, time)
@@ -186,5 +192,14 @@ function v = update_v(w, c1, c2, v, x, pbest, gbest, V_min, V_max)
     v = w * v + X - x; % 速度更新
     v(v < V_min) = V_min;
     v(v > V_max) = V_max;
+end
+
+%% 更新位置
+function output = update_x(x ,v, N, V)
+    y = x + v;
+    x2 = y(N+1:end);
+    x2 = x2 ./ max(x2) .* V;
+    y(N+1:end) = x2;
+    output = y;
 end
 

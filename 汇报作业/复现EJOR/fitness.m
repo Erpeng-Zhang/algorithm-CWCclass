@@ -39,17 +39,21 @@ function y = fitness(x,V, data, time)
     
     % 小车方案
     x2 = x(N+1 : end); 
-    n = floor(numel(x2) / V); %小车负责到的数量
-    [~,index2] = sort(x2,'ascend');
-    p_v = zeros(1,N);
-    for i = 1 : V-1
-        p_v(index2( n*(i-1)+1 : n*i)) = i;
-    end
-    p_v(index2( n*i+1 : N) ) = V;
+    % n = floor(numel(x2) / V); %小车负责到的数量
+    % [~,index2] = sort(x2,'ascend');
+    % p_v = zeros(1,N);
+    % for i = 1 : V-1
+    %     p_v(index2( n*(i-1)+1 : n*i)) = i;
+    % end
+    % p_v(index2( n*i+1 : N) ) = V;
 
+    p_v = ceil(x2);
     project(5,:) = p_v;
 
-    
+    if max(p_v) > 2
+        a = 1;
+    end
+
     % 各工件退出时间
     machine_time = zeros(1,n_M);
     car_time = zeros(1,V);
