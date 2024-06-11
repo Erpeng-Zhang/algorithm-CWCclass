@@ -14,11 +14,17 @@ time = [0 6 8 10 12
         8 8 6 0 6
         6 10 8 6 0];
 
+% % 生成数据,机器数，工件数，每个工件的工序数
+% dataset = data(10,10,10);
+% data = dataset(2).data;
+% time = dataset(2).time;
+
 
 N = size(data,2); % 任务数
 
 LB = cal_LB(data, time); %可行解下界
 
+tic
 %% 算法参数
 w = 1 / (2 * log(2)); % 惯性权重
 c1 = 0.5 + log(2);    % 个体学习因子
@@ -130,6 +136,7 @@ while T >= TF && Gbest.y > LB && g < maxIT
     % 存储绘图
     d_f_p = [d_f_p; g,Gbest.y];
 end
+toc
 
 figure(1)
 plot(d_f_p(:,1),d_f_p(:,2),'-');
@@ -158,7 +165,7 @@ function lb = cal_LB(data, time)
         exit_time(i) = sum(value(4,:));
         ms = value(3,:)+1;
         for k = 1 : numel(ms)-1
-            exit_time(i) = exit_time(i) + time(ms(i),ms(i+1));
+            exit_time(i) = exit_time(i) + time(ms(k),ms(k+1));
         end
     end
     lb = max(exit_time);

@@ -5,22 +5,38 @@ import pulp
 prob = pulp.LpProblem("Job_Shop_Scheduling_Problem", pulp.LpMinimize)
 
 # Sets
-J = [...]  # Set of jobs
-M = [...]  # Set of machines
+J = [1,2,3]  # Set of jobs
+M = [1,2,3]  # Set of machines
 V = [...]  # Set of vehicles
-f = []
-t = []
-J_j = [...]  
+f = [1,2,3]
+t = [1,2,3]
+J_j = [[1,2,3]
+       [1,2,3]
+       [1,2,3]]
+n_j = []
+for i in range(len(J_j)):
+    n_j.append(len(J_j[i]))
 # n_j + 1
-J1_j = [...]  
+J1_j = [[0,1,2,3,4]
+       [0,1,2,3,4]
+       [0,1,2,3,4]]
 
 # Parameters
+O_ij = []
+for i in range(len(J1_j)):
+    O_ij.append(len(J1_j[i]))
+T = [[0, 6, 8, 10, 12],
+      [12, 0, 6, 8, 10],
+      [10, 6, 0, 6, 8],
+      [8, 8, 6, 0, 6],
+      [6, 10, 8, 6, 0]]
+
 p_kl = {...}  # Processing time of job k on machine l
 tau_kl = {...}  # Transport time from operation (k-1) to k for job l
 tau_LU = {...}  # Transport time from LU to job's first machine
 v_ij = {...}  # Time vehicle needs to travel between jobs i and j
-A = ...  # Total number of vehicles
-LN = ...  # A large number
+A = 2  # Total number of vehicles
+LN = 999999  # A large number
 
 # Decision Variables
 w = pulp.LpVariable.dicts("w", ((k, l, i, j) for k in J for l in M for i in J for j in M), 0, 1, pulp.LpBinary)
