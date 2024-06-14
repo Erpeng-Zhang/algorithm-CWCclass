@@ -15,7 +15,7 @@ Optimals = dataset(3).Optimal;
 for i = 1 : 10
     for j = 1 : 4
         output = PSOSA(datas{i},times{j},V,Optimals(i,j));
-        fprintf('工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d秒,GAP:%d,LB:%d',i,j,Optimals(i,j),output(1),round(output(2),2),output(3),output(4));
+        fprintf('工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d秒,GAP:%d,LB:%d\n',i,j,Optimals(i,j),output(1),round(output(2),2),output(3),output(4));
         results((i-1)*4 + j,:) = output;
     end
 end
@@ -33,7 +33,8 @@ for i = 1 : 10
             output = PSOSA(datas{i},times{j},V,Optimals(i,j));
             outputs = [outputs;otuput];
         end
-        fprintf('150次平均：工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d,GAP:%d,LB:',i,j,Optimals(i,j),output(1),output(2),output(3),output(4));
+        output = mean(outputs);
+        fprintf('150次平均：工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d,GAP:%d,LB:\n',i,j,Optimals(i,j),output(1),output(2),output(3),output(4));
         results_150((i-1)*4 + j,:) = mean(outputs);
     end
 end
