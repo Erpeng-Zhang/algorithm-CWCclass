@@ -70,7 +70,7 @@ F_SA = particles(a).y;
 T = TI; g = 0;
 d_f_p = [];%存储迭代过程中的最优解  用于绘图
 %% 主循环
-while T >= TF && Gbest.y > LB && g < 1500
+while (T >= TF || (Gbest.x(1) > Gbest.y / LB)) && g < 1500
     for r = 1 : R
         % 产生邻域解
         Y = cal_larboslusion(X_SA,N);
@@ -135,7 +135,7 @@ while T >= TF && Gbest.y > LB && g < 1500
     % 存储绘图
     d_f_p = [d_f_p; g,Gbest.y];
 end
-toc
+t = toc;
 
 figure(1)
 plot(d_f_p(:,1),d_f_p(:,2),'-');
