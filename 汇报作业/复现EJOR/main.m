@@ -2,24 +2,22 @@
 %  中的算法进行复现
 clc;clear;
 
-%% 任务数据——工件号，任务号，机器号，处理时间
-V = 2;  % 小车数
-data = [1 1 1 1 2 2 2 2 3 3 3 3
-        1 2 3 4 5 6 7 8 9 10 11 12
-        1 3 2 0 3 1 4 0 2 4 1 0
-        10 16 18 0 15 22 18 0 18 16 22 0];
-time = [0 6 8 10 12
-        12 0 6 8 10
-        10 6 0 6 8
-        8 8 6 0 6
-        6 10 8 6 0];
 
-% % 生成数据,机器数，工件数，每个工件的工序数
-% dataset = data(10,10,10);
+
+
+
+
+
+% % 随机生成数据集,机器数，工件数，每个工件的工序数
+dataset = data(10,10,10);
 % data = dataset(2).data;
 % time = dataset(2).time;
 
+%% 论文示例数据
+data = dataset(1).data;
+time = dataset(1).time;
 
+V = 2;  % 小车数
 N = size(data,2); % 任务数
 
 LB = cal_LB(data, time); %可行解下界
@@ -135,7 +133,7 @@ while (T >= TF || (Gbest.x(1) > Gbest.y / LB)) && g < 1500
     % 存储绘图
     d_f_p = [d_f_p; g,Gbest.y];
 end
-t = toc;
+toc;
 
 figure(1)
 plot(d_f_p(:,1),d_f_p(:,2),'-');

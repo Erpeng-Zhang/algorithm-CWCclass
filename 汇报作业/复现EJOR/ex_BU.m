@@ -4,14 +4,46 @@ clc;clear;
 
 results = zeros(10*4,4);
 V = 2 ;
+dataset = data(3,3,3);
 
-% for i = 1 : 10
-%     for j = 1 : 4
-%         output = PSOSA(datas{i},times{j},V,Optimal(i,j));
-%         results((i-1)*4 + j,:) = output;
-%     end
-% end
+datas = dataset(3).data;
+times = dataset(3).time;
+Optimals = dataset(3).Optimal;
 
+
+
+for i = 1 : 10
+    for j = 1 : 4
+        output = PSOSA(datas{i},times{j},V,Optimals(i,j));
+        fprintf('工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d秒,GAP:%d,LB:%d',i,j,Optimals(i,j),output(1),round(output(2),2),output(3),output(4));
+        results((i-1)*4 + j,:) = output;
+    end
+end
+
+% results输出为csv
+csvwrite('results.csv',results);
+fprintf('done1\n');
+
+%% 重复150次，取平均值
+results_150 = zeros(10*4,4);
+for i = 1 : 10
+    for j = 1 : 4
+        outputs = [];
+        for k = 1 : 150            
+            output = PSOSA(datas{i},times{j},V,Optimals(i,j));
+            outputs = [outputs;otuput];
+        end
+        fprintf('150次平均：工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d,GAP:%d,LB:',i,j,Optimals(i,j),output(1),output(2),output(3),output(4));
+        results_150((i-1)*4 + j,:) = mean(outputs);
+    end
+end
+
+% results输出为csv
+csvwrite('results_150.csv',results_150);
+fprintf('done2\n');
+
+
+%% 函数化的PSOSA
 function output = PSOSA(data,time,V,Optimal)
     N = size(data,2); % 任务数
     LB = cal_LB(data, time); %可行解下界
@@ -60,9 +92,8 @@ function output = PSOSA(data,time,V,Optimal)
     
     % 初始化温度和迭代次数
     T = TI; g = 0;
-    d_f_p = [];%存储迭代过程中的最优解  用于绘图
     %% 主循环
-    while T >= TF 
+    while T >= TF && Gbest.y > Optimal
         for r = 1 : R
             % 产生邻域解
             Y = cal_larboslusion(X_SA,N);
@@ -123,9 +154,7 @@ function output = PSOSA(data,time,V,Optimal)
         g = g + 1;
     end
     t = toc;
-    % 每次迭代输出最优解
-    disp(['，最优解：', num2str(Gbest.y)]);
-    % 
+
     GAP = (Gbest.y-Optimal) / Optimal;
     output = [Gbest.y, t, GAP, LB];
 end
@@ -150,7 +179,6 @@ end
 %% 产生邻域解
 function y = cal_larboslusion(x,N)
     x1 = x(1 : N);x2=x(N+1:end);
-    
     if rand < 0.5
         ind = randperm(N,2);
         dots = x1(ind);
