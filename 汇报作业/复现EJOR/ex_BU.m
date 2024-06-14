@@ -24,24 +24,24 @@ end
 csvwrite('results.csv',results);
 fprintf('done1\n');
 
-%% 重复150次，取平均值
-results_150 = zeros(10*4,4);
-for i = 1 : 10
-    for j = 1 : 4
-        outputs = [];
-        for k = 1 : 150            
-            output = PSOSA(datas{i},times{j},V,Optimals(i,j));
-            outputs = [outputs;otuput];
-        end
-        output = mean(outputs);
-        fprintf('150次平均：工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d,GAP:%d,LB:\n',i,j,Optimals(i,j),output(1),output(2),output(3),output(4));
-        results_150((i-1)*4 + j,:) = mean(outputs);
-    end
-end
+% %% 重复150次，取平均值
+% results_150 = zeros(10*4,4);
+% for i = 1 : 10
+%     for j = 1 : 4
+%         outputs = [];
+%         for k = 1 : 150            
+%             output = PSOSA(datas{i},times{j},V,Optimals(i,j));
+%             outputs = [outputs;otuput];
+%         end
+%         output = mean(outputs);
+%         fprintf('150次平均：工作%d，布局%d，已知最优值%d---算法最优值%d,耗时：%d,GAP:%d,LB:\n',i,j,Optimals(i,j),output(1),output(2),output(3),output(4));
+%         results_150((i-1)*4 + j,:) = mean(outputs);
+%     end
+% end
 
-% results输出为csv
-csvwrite('results_150.csv',results_150);
-fprintf('done2\n');
+% % results输出为csv
+% csvwrite('results_150.csv',results_150);
+% fprintf('done2\n');
 
 
 %% 函数化的PSOSA
