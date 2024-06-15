@@ -2,12 +2,6 @@
 %  中的算法进行复现
 clc;clear;
 
-
-
-
-
-
-
 % % 随机生成数据集,机器数，工件数，每个工件的工序数
 dataset = data(10,10,10);
 % data = dataset(2).data;
@@ -68,7 +62,7 @@ F_SA = particles(a).y;
 T = TI; g = 0;
 d_f_p = [];%存储迭代过程中的最优解  用于绘图
 %% 主循环
-while (T >= TF || (Gbest.x(1) > Gbest.y / LB)) && g < 1500
+while T >= TF 
     for r = 1 : R
         % 产生邻域解
         Y = cal_larboslusion(X_SA,N);
